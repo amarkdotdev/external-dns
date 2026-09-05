@@ -476,6 +476,12 @@ func (im *TXTRegistry) findOrphanOwnershipTXTs(records []*endpoint.Endpoint, rec
 		if !ok || len(types) == 0 || types.Has(recordType) {
 			continue
 		}
+		// A ALIAS records used a "cname-" ownership TXT before #6523. The name still
+		// decodes as CNAME even though only A/AAAA remain, so do not treat it as an
+		// orphan to delete; leave it for scripts/aws-cleanup-legacy-txt-records.py.
+		if recordType == endpoint.RecordTypeCNAME && types.Has(endpoint.RecordTypeA) {
+			continue
+		}
 		orphanTXTs = append(orphanTXTs, record)
 	}
 	return orphanTXTs
